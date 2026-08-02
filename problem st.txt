@@ -1,0 +1,59 @@
+1. Title
+  Smart Parking & Slot Booking Platform
+2. Domain
+  Urban Mobility / Smart Infrastructure (Software-focused web application; no hardware/IoT sensors). Works across multiple venues: hospitals, malls, events, schools.
+3. Who is the user? 
+  User (Driver/Visitor): Searches for parking, books slots, makes payments in ₹, views booking history, cancels bookings.
+Parking Operator (Lot Admin): Manages their own parking lot — configures slots by category, sets pricing in ₹, views bookings, releases disputed slots, views revenue and audit logs for their lot.
+Platform Admin: Full system access — views all lots and bookings, manages operators, force-releases any slot, reviews audit trail, resolves disputes.
+4. What problem are we solving?
+   Today's parking apps fail when multiple users book the same slot simultaneously — both get confirmation, but only one spot exists (user arrives to find someone else parked there). Additionally, if a booking mysteriously disappears, there's no trace of who changed it.
+Real example: A hospital visitor books a slot, pays ₹75, arrives to find an ambulance in "their" spot. No audit trail, impossible to resolve.
+
+Our solution: Atomic, transaction-locked booking (only one user per slot, guaranteed) + tamper-proof audit log (every booking state change is permanently recorded with who, what, when). Works across any venue without hardcoding domain logic.
+5. Proposed Solution
+ Lot Search & Browse: Users search by location, view slots by category (emergency, staff, visitor, accessible, VIP, valet), view pricing in ₹
+Atomic Booking: Backend locks database row, re-checks availability, reserves slot in one transaction. If taken, user is rejected cleanly before payment
+Payment Integration: Stripe/Razorpay test mode in INR. Staff slots are ₹0 (free). Visitor/valet/general slots charged per hour (₹75/hour for hospital visitors, ₹100-₹150 for mall). Payment logged and tied to booking
+Role-Based Access Control: Users see only public search and own bookings. Operators see their lot data only. Admins see everything
+Audit Log: Every booking state change (created, confirmed, paid, cancelled, released) is immutable with timestamp, user/operator ID, amount in ₹, and reason
+Concurrency Safety: Multi-user bookings on same slot use select_for_update() row locking — one succeeds, others fail cleanly
+Multi-Domain Demo: Sample data for hospital (emergency/staff/visitor slots, staff ₹0, visitor ₹75/hour) and mall (valet ₹150/hour, general ₹100/hour)
+6. Core Entities / Database Tables
+Users — id, username, email, password_hash, phone, created_at, role (user/operator/admin)
+ParkingLots — id, name, location, city, operator_id (FK), total_slots, created_at
+Slots — id, lot_id (FK), slot_number, category (emergency/staff/visitor/accessible/VIP/valet), status (FREE/BOOKED), is_paid (true for visitor, false for staff), priority_level, created_at
+Bookings — id, user_id (FK), slot_id (FK), start_time, end_time, amount_inr (₹0 for staff, ₹75+ for visitor), status (PENDING/CONFIRMED/PAID/CANCELLED), created_at, cancelled_at
+Payments — id, booking_id (FK), amount_inr, stripe_payment_id, status (pending/succeeded/failed), created_at
+AuditLog — id, booking_id (FK), user_id (FK), operator_id (FK, nullable), action (created/confirmed/paid/cancelled/force_released), amount_inr, reason, timestamp, immutable
+PricingRules — id, lot_id (FK), category, hourly_rate_inr (₹0 for staff, ₹75 for hospital visitor, ₹100-150 for mall), daily_max_rate_inr, created_at
+7. User Roles & Permissions
+
+User (Driver/Visitor): Can search lots, view slots, book a slot, pay via Stripe/Razorpay in ₹, view own booking history, and cancel own bookings. Cannot view other users' data or access admin functions.
+
+Parking Operator (Lot Admin): Can configure their own lot, add/edit slots, set pricing in ₹ (staff ₹0, visitor ₹75/hour), view all bookings for their lot, release disputed slots, view revenue, and access audit log for their lot. Cannot view other operators' lots or access admin functions.
+
+Platform Admin: Full access to all lots, all bookings, all operators, full audit trail, force-release any slot, manage operator accounts, and generate platform-wide reports. No restrictions.
+
+8. Success Criteria
+ Performance: User can search, select, and confirm a booking in <30 seconds (includes payment in ₹).
+ Concurrency Safety: Fire 10 simultaneous booking requests on same slot → exactly 1 succeeds with booking amount in ₹, other 9 receive rejection. Repeatable and provable.
+ Audit Logging: Every booking state change recorded with amount_inr, timestamp, user/operator ID, action, and reason. No historical entries can be edited or deleted.
+ Payment Integration: Stripe/Razorpay test mode works end-to-end. Users see price in ₹, payment charged in rupees, booking transitions to PAID.
+ Role-Based Access: Users/operators/admins have appropriate permissions. Data is filtered per role at API and database level.
+ Multi-Domain Demo: Hospital lot (emergency/staff ₹0/visitor ₹75/hour) and mall lot (valet ₹150/hour, general ₹100/hour) configured and working.
+ Security: Passwords hashed (bcrypt), sessions/JWT secure, SQL injection prevented (ORM), CSRF tokens on forms.
+ Error Handling: Edge cases handled gracefully — slot released during booking, payment fails, operator force-releases while user booking — all logged with correct ₹  amounts.
+9. Out of Scope
+ Real IoT sensors or live occupancy detection.
+ Real payment processing (Stripe/Razorpay sandbox/test mode only; no actual money).
+ Native mobile app (web app only).
+ GPS navigation or turn-by-turn directions.
+ Dynamic surge pricing based on demand.
+ License plate recognition or automatic vehicle detection.
+ Real-time parking availability from municipal databases.
+ Email/SMS notifications.
+ Multi-currency or international payment handling.
+10. Chosen Track
+Python (Django) with PostgreSQL
+Rationale: Django ORM provides select_for_update() for row-level locking (core to concurrency safety). Built-in authentication and permission framework handle role-based access. PostgreSQL's ACID guarantees ensure transaction integrity for bookings and payments. Easy to deploy on Render, Railway, or Heroku.
