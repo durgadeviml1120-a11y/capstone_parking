@@ -1,0 +1,71 @@
+Table Users {
+  id int [pk, increment]
+  username varchar
+  email varchar
+  password_hash varchar
+  phone varchar
+  role varchar
+}
+
+Table ParkingLots {
+  id int [pk, increment]
+  name varchar
+  location varchar
+  operator_id int
+  total_slots int
+}
+
+Table Slots {
+  id int [pk, increment]
+  lot_id int
+  slot_number varchar
+  category varchar
+  status varchar
+  is_paid boolean
+}
+
+Table Bookings {
+  id int [pk, increment]
+  user_id int
+  slot_id int
+  start_time datetime
+  end_time datetime
+  amount_inr decimal
+  status varchar
+}
+
+Table Payments {
+  id int [pk, increment]
+  booking_id int
+  amount_inr decimal
+  payment_method varchar
+  payment_status varchar
+  transaction_id varchar
+}
+
+Table AuditLog {
+  id int [pk, increment]
+  booking_id int
+  user_id int
+  action varchar
+  amount_inr decimal
+  reason varchar
+  timestamp datetime
+}
+
+Table PricingRules {
+  id int [pk, increment]
+  lot_id int
+  category varchar
+  hourly_rate_inr decimal
+  daily_max_rate_inr decimal
+}
+
+Ref: Users.id < ParkingLots.operator_id
+Ref: ParkingLots.id < Slots.lot_id
+Ref: ParkingLots.id < PricingRules.lot_id
+Ref: Users.id < Bookings.user_id
+Ref: Slots.id < Bookings.slot_id
+Ref: Bookings.id < Payments.booking_id
+Ref: Bookings.id < AuditLog.booking_id
+Ref: Users.id < AuditLog.user_id
