@@ -1,4 +1,5 @@
 import { useState } from "react";
+import API from "./api";
 
 function Login() {
   const [username, setUsername] = useState("");
@@ -8,32 +9,22 @@ function Login() {
     e.preventDefault();
 
     try {
-      const response = await fetch(
-        "http://127.0.0.1:8000/api/auth/login/",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            username: username,
-            password: password,
-          }),
-        }
-      );
+      const response = await API.post("login/", {
+        username,
+        password,
+      });
 
-      const data = await response.json();
+      localStorage.setItem("access_token", response.data.access);
+      localStorage.setItem("refresh_token", response.data.refresh);
 
-      if (response.ok) {
-        localStorage.setItem("access_token", data.access);
-        localStorage.setItem("refresh_token", data.refresh);
-        alert("Login successful!");
-      } else {
-        alert(data.detail || "Login failed");
-      }
+      alert("Login successful!");
     } catch (error) {
       console.error(error);
-      alert("Unable to connect to server");
+
+      const message =
+        error.response?.data?.detail || "Login failed";
+
+      alert(message);
     }
   };
 
@@ -48,6 +39,7 @@ function Login() {
           placeholder="Username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
+          required
         />
 
         <br />
@@ -58,6 +50,7 @@ function Login() {
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          required
         />
 
         <br />

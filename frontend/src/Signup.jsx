@@ -1,4 +1,5 @@
 import { useState } from "react";
+import API from "./api";
 
 function Signup() {
   const [username, setUsername] = useState("");
@@ -11,40 +12,29 @@ function Signup() {
     setMessage("");
 
     try {
-      const response = await fetch(
-        "http://127.0.0.1:8000/api/auth/signup/",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            username: username,
-            email: email,
-            password: password,
-          }),
-        }
-      );
+      await API.post("signup/", {
+        username,
+        email,
+        password,
+      });
 
-      const data = await response.json();
+      setMessage("Signup successful! You can now login.");
 
-      if (response.ok) {
-        setMessage("Signup successful! You can now login.");
-        setUsername("");
-        setEmail("");
-        setPassword("");
-      } else {
-        setMessage(
-          data.detail ||
-          data.username?.[0] ||
-          data.email?.[0] ||
-          data.password?.[0] ||
-          "Signup failed"
-        );
-      }
+      setUsername("");
+      setEmail("");
+      setPassword("");
     } catch (error) {
       console.error(error);
-      setMessage("Unable to connect to server");
+
+      const data = error.response?.data;
+
+      setMessage(
+        data?.detail ||
+        data?.username?.[0] ||
+        data?.email?.[0] ||
+        data?.password?.[0] ||
+        "Signup failed"
+      );
     }
   };
 
