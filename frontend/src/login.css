@@ -1,0 +1,162 @@
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  background: #f5f7fa;
+}
+
+/* ================= IMAGE ================= */
+
+.login-image-section {
+  width: 55%;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
+.parking-image {
+  width: 200%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  object-position: left center;
+}
+.image-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 50px 40px;
+  box-sizing: border-box;
+  background: linear-gradient(
+    transparent,
+    rgba(0, 0, 0, 0.75)
+  );
+  color: white;
+}
+
+.image-overlay h1 {
+  font-size: 42px;
+  margin: 0 0 10px;
+}
+
+.image-overlay p {
+  font-size: 18px;
+  margin: 0;
+}
+
+/* ================= LOGIN ================= */
+
+.login-form-section {
+  width: 45%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+  box-sizing: border-box;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 420px;
+}
+
+.login-card h1 {
+  font-size: 34px;
+  margin-bottom: 10px;
+  color: #1f2937;
+}
+
+.login-subtitle {
+  color: #6b7280;
+  margin-bottom: 35px;
+}
+
+/* ================= FORM ================= */
+
+.login-card form {
+  display: flex;
+  flex-direction: column;
+}
+
+.login-card label {
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.login-card input {
+  padding: 14px;
+  margin-bottom: 22px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 15px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.login-card input:focus {
+  border-color: #2563eb;
+}
+
+/* ================= BUTTON ================= */
+
+.login-button {
+  padding: 14px;
+  border: none;
+  border-radius: 8px;
+  background: #2563eb;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 5px;
+}
+
+.login-button:hover {
+  background: #1d4ed8;
+}
+
+/* ================= SIGNUP ================= */
+
+.signup-text {
+  margin-top: 25px;
+  text-align: center;
+  color: #6b7280;
+}
+
+.signup-text a {
+  color: #2563eb;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.signup-text a:hover {
+  text-decoration: underline;
+}
+
+/* ================= MOBILE ================= */
+
+@media (max-width: 768px) {
+
+  .login-page {
+    flex-direction: column;
+  }
+
+  .login-image-section {
+    width: 100%;
+    height: 300px;
+  }
+
+  .login-form-section {
+    width: 100%;
+    padding: 30px 20px;
+  }
+
+  .image-overlay h1 {
+    font-size: 30px;
+  }
+
+  .image-overlay p {
+    font-size: 15px;
+  }
+}
