@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     'app',
     'rest_framework',
     'corsheaders',
+    'drf_spectacular',
 ]
 
 
@@ -109,8 +110,14 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Smart Parking API',
+    'DESCRIPTION': 'API documentation for the Smart Parking Management System',
+    'VERSION': '1.0.0',
+}
