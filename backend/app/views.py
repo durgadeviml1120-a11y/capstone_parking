@@ -1,14 +1,18 @@
 from django.contrib.auth.models import User
-from rest_framework.decorators import api_view, permission_classes
 from rest_framework import generics, serializers
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from django.utils import timezone
 from django.db import transaction
-   
-from .models import ParkingLot, Slot,Booking, Payment
 
+from .models import (
+    ParkingLot,
+    Slot,
+    Booking,
+    Payment,
+    AuditLog,
+)
 
 from .serializers import (
     SignupSerializer,
@@ -33,7 +37,8 @@ class ParkingLotListCreateView(generics.ListCreateAPIView):
 class SlotListCreateView(generics.ListCreateAPIView):
     queryset = Slot.objects.all()
     serializer_class = SlotSerializer
-    
+
+
 class BookingListCreateView(generics.ListCreateAPIView):
     serializer_class = BookingSerializer
     permission_classes = [IsAuthenticated]
@@ -49,7 +54,16 @@ class BookingListCreateView(generics.ListCreateAPIView):
         ).order_by("-created_at")
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        booking = serializer.save(user=self.request.user)
+
+        AuditLog.objects.create(
+            user=self.request.user,
+            action="BOOKING_CREATED",
+            details=(
+                f"Booking #{booking.id} created "
+                f"for Slot {booking.slot.slot_number}"
+            )
+        )
 
 
 class PaymentCreateView(generics.CreateAPIView):
@@ -77,7 +91,9 @@ class PaymentCreateView(generics.CreateAPIView):
             status="SUCCESS",
             payment_method="UPI",
             paid_at=timezone.now(),
-            transaction_id=f"TXN-{booking.id}-{timezone.now().timestamp()}"
+            transaction_id=(
+                f"TXN-{booking.id}-{timezone.now().timestamp()}"
+            )
         )
 
         booking.status = "CONFIRMED"
@@ -85,7 +101,17 @@ class PaymentCreateView(generics.CreateAPIView):
 
         booking.slot.is_available = False
         booking.slot.save()
-    
+
+        AuditLog.objects.create(
+            user=self.request.user,
+            action="PAYMENT_SUCCESS",
+            details=(
+                f"Payment successful for Booking #{booking.id}, "
+                f"Amount Rs.{booking.amount}"
+            )
+        )
+
+
 class CurrentUserView(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticated]
 
@@ -100,6 +126,8 @@ class CurrentUserView(generics.RetrieveAPIView):
             "email": user.email,
             "role": role,
         })
+
+
 class BookingCancelView(generics.UpdateAPIView):
     serializer_class = BookingSerializer
     permission_classes = [IsAuthenticated]
@@ -115,7 +143,11 @@ class BookingCancelView(generics.UpdateAPIView):
 
         if booking.status != "CONFIRMED":
             return Response(
-                {"detail": "Only confirmed bookings can be cancelled."},
+                {
+                    "detail": (
+                        "Only confirmed bookings can be cancelled."
+                    )
+                },
                 status=400
             )
 
@@ -125,6 +157,15 @@ class BookingCancelView(generics.UpdateAPIView):
         slot = booking.slot
         slot.is_available = True
         slot.save()
+
+        AuditLog.objects.create(
+            user=request.user,
+            action="BOOKING_CANCELLED",
+            details=(
+                f"Booking #{booking.id} cancelled. "
+                f"Slot {slot.slot_number} released."
+            )
+        )
 
         serializer = self.get_serializer(booking)
 

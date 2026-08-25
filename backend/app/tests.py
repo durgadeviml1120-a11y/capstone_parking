@@ -7,9 +7,7 @@ import pytest
 from django.contrib.auth.models import User
 from django.utils import timezone
 from rest_framework.test import APIClient
-
-from .models import ParkingLot, Slot, Booking, Payment
-
+from .models import ParkingLot, Slot, Booking, Payment, AuditLog
 
 @pytest.mark.django_db
 def test_signup():
@@ -273,3 +271,149 @@ def test_admin_can_view_all_bookings():
 
     assert len(data) == 1
     assert data[0]["username"] == "normaluser"
+
+@pytest.mark.django_db
+def test_booking_creation_creates_audit_log():
+    user = User.objects.create_user(
+        username="auditbooking",
+        password="password123",
+    )
+
+    parking_lot = ParkingLot.objects.create(
+        name="Audit Parking",
+        location="Chennai",
+        total_slots=10,
+    )
+
+    slot = Slot.objects.create(
+        parking_lot=parking_lot,
+        slot_number=1,
+        vehicle_type="CAR",
+        is_available=True,
+    )
+
+    client = APIClient()
+    client.force_authenticate(user=user)
+
+    start_time = timezone.now()
+    end_time = start_time + timedelta(hours=1)
+
+    response = client.post(
+        "/api/auth/bookings/",
+        {
+            "slot": slot.id,
+            "start_time": start_time.isoformat(),
+            "end_time": end_time.isoformat(),
+            "amount": "100.00",
+        },
+        format="json",
+    )
+
+    assert response.status_code == 201
+
+    booking = Booking.objects.get(
+        user=user,
+        slot=slot
+    )
+
+    assert AuditLog.objects.filter(
+        user=user,
+        action="BOOKING_CREATED",
+        details__contains=f"Booking #{booking.id}"
+    ).exists()
+
+
+@pytest.mark.django_db
+def test_payment_creates_audit_log():
+    user = User.objects.create_user(
+        username="auditpayment",
+        password="password123",
+    )
+
+    parking_lot = ParkingLot.objects.create(
+        name="Audit Parking",
+        location="Chennai",
+        total_slots=10,
+    )
+
+    slot = Slot.objects.create(
+        parking_lot=parking_lot,
+        slot_number=1,
+        vehicle_type="CAR",
+        is_available=True,
+    )
+
+    booking = Booking.objects.create(
+        user=user,
+        slot=slot,
+        start_time=timezone.now(),
+        end_time=timezone.now() + timedelta(hours=1),
+        amount="100.00",
+        status="PENDING",
+    )
+
+    client = APIClient()
+    client.force_authenticate(user=user)
+
+    response = client.post(
+        "/api/auth/payments/",
+        {
+            "booking": booking.id,
+        },
+        format="json",
+    )
+
+    assert response.status_code == 201
+
+    assert AuditLog.objects.filter(
+        user=user,
+        action="PAYMENT_SUCCESS",
+        details__contains=f"Booking #{booking.id}"
+    ).exists()
+
+
+@pytest.mark.django_db
+def test_booking_cancellation_creates_audit_log():
+    user = User.objects.create_user(
+        username="auditcancel",
+        password="password123",
+    )
+
+    parking_lot = ParkingLot.objects.create(
+        name="Audit Parking",
+        location="Chennai",
+        total_slots=10,
+    )
+
+    slot = Slot.objects.create(
+        parking_lot=parking_lot,
+        slot_number=1,
+        vehicle_type="CAR",
+        is_available=False,
+    )
+
+    booking = Booking.objects.create(
+        user=user,
+        slot=slot,
+        start_time=timezone.now(),
+        end_time=timezone.now() + timedelta(hours=1),
+        amount="100.00",
+        status="CONFIRMED",
+    )
+
+    client = APIClient()
+    client.force_authenticate(user=user)
+
+    response = client.patch(
+        f"/api/auth/bookings/{booking.id}/cancel/",
+        {},
+        format="json",
+    )
+
+    assert response.status_code == 200
+
+    assert AuditLog.objects.filter(
+        user=user,
+        action="BOOKING_CANCELLED",
+        details__contains=f"Booking #{booking.id}"
+    ).exists()
