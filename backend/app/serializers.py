@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from .models import ParkingLot, Slot, Booking, Payment
+from .models import ParkingLot, Slot, Booking, Payment,AuditLog
 
 class SignupSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
@@ -99,4 +99,28 @@ class PaymentSerializer(serializers.ModelSerializer):
             'transaction_id',
             'status',
             'paid_at',
+        ]
+class AuditLogSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(
+        source="user.username",
+        read_only=True
+    )
+
+    class Meta:
+        model = AuditLog
+        fields = [
+            'id',
+            'user',
+            'username',
+            'action',
+            'details',
+            'timestamp',
+        ]
+        read_only_fields = [
+            'id',
+            'user',
+            'username',
+            'action',
+            'details',
+            'timestamp',
         ]
