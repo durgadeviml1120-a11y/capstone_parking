@@ -33,6 +33,7 @@ class SlotSerializer(serializers.ModelSerializer):
         model = Slot
         fields = '__all__'
 
+        
 class BookingSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
         source="user.username",
@@ -70,6 +71,7 @@ class BookingSerializer(serializers.ModelSerializer):
             'status',
             'created_at',
         ]
+
         read_only_fields = [
             'id',
             'user',
@@ -77,9 +79,27 @@ class BookingSerializer(serializers.ModelSerializer):
             'slot_number',
             'vehicle_type',
             'parking_location',
+            'amount',
+            'status',
             'created_at',
         ]
 
+    def validate(self, data):
+        start_time = data.get('start_time')
+        end_time = data.get('end_time')
+        slot = data.get('slot')
+
+        if start_time and end_time and end_time <= start_time:
+            raise serializers.ValidationError(
+                "End time must be after start time."
+            )
+
+        if slot and not slot.is_available:
+            raise serializers.ValidationError(
+                "This parking slot is not available."
+            )
+
+        return data
 
 class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
@@ -124,3 +144,8 @@ class AuditLogSerializer(serializers.ModelSerializer):
             'details',
             'timestamp',
         ]
+class CurrentUserSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    username = serializers.CharField()
+    email = serializers.EmailField()
+    role = serializers.CharField()

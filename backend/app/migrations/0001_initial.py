@@ -55,7 +55,7 @@ class Migration(migrations.Migration):
                 ('status', models.CharField(choices=[('PENDING', 'Pending'), ('SUCCESS', 'Success'), ('FAILED', 'Failed'), ('REFUNDED', 'Refunded')], default='PENDING', max_length=10)),
                 ('payment_method', models.CharField(default='UPI', max_length=50)),
                 ('paid_at', models.DateTimeField(blank=True, null=True)),
-                ('booking', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='payment', to='parking.booking')),
+                ('booking', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='payment', to='app.booking')),
             ],
         ),
         migrations.CreateModel(
@@ -65,13 +65,13 @@ class Migration(migrations.Migration):
                 ('slot_number', models.PositiveIntegerField()),
                 ('vehicle_type', models.CharField(choices=[('BIKE', 'Bike'), ('CAR', 'Car'), ('TRUCK', 'Truck')], max_length=10)),
                 ('is_available', models.BooleanField(default=True)),
-                ('parking_lot', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='slots', to='parking.parkinglot')),
+                ('parking_lot', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='slots', to='app.parkinglot')),
             ],
         ),
         migrations.AddField(
             model_name='booking',
             name='slot',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='bookings', to='parking.slot'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='bookings', to='app.slot'),
         ),
         migrations.AddConstraint(
             model_name='slot',

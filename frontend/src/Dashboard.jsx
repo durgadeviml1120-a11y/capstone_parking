@@ -19,8 +19,9 @@ function Dashboard() {
     const fetchParkingData = async () => {
       try {
         const parkingResponse = await API.get("parking-lots/");
+        console.log("Parking lots response:", parkingResponse.data);
         const slotsResponse = await API.get("slots/");
-
+        console.log("Slots response:", slotsResponse.data);
         const lots =
           parkingResponse.data.results || parkingResponse.data;
 

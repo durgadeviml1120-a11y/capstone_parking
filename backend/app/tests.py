@@ -417,3 +417,196 @@ def test_booking_cancellation_creates_audit_log():
         action="BOOKING_CANCELLED",
         details__contains=f"Booking #{booking.id}"
     ).exists()
+
+@pytest.mark.django_db
+def test_user_cannot_cancel_another_users_booking():
+    user1 = User.objects.create_user(
+        username="user1",
+        password="password123",
+    )
+
+    user2 = User.objects.create_user(
+        username="user2",
+        password="password123",
+    )
+
+    parking_lot = ParkingLot.objects.create(
+        name="Secure Parking",
+        location="Chennai",
+        total_slots=10,
+    )
+
+    slot = Slot.objects.create(
+        parking_lot=parking_lot,
+        slot_number=1,
+        vehicle_type="CAR",
+        is_available=False,
+    )
+
+    booking = Booking.objects.create(
+        user=user1,
+        slot=slot,
+        start_time=timezone.now(),
+        end_time=timezone.now() + timedelta(hours=1),
+        amount="100.00",
+        status="CONFIRMED",
+    )
+
+    client = APIClient()
+
+    # Login as user2
+    client.force_authenticate(user=user2)
+
+    response = client.patch(
+        f"/api/auth/bookings/{booking.id}/cancel/",
+        {},
+        format="json",
+    )
+
+    # User2 must not be allowed to cancel User1's booking
+    assert response.status_code == 404
+
+    booking.refresh_from_db()
+
+    # Booking must remain confirmed
+    assert booking.status == "CONFIRMED"
+
+@pytest.mark.django_db
+def test_user_cannot_pay_for_another_users_booking():
+    user1 = User.objects.create_user(
+        username="paymentowner",
+        password="password123",
+    )
+
+    user2 = User.objects.create_user(
+        username="paymentattacker",
+        password="password123",
+    )
+
+    parking_lot = ParkingLot.objects.create(
+        name="Secure Payment Parking",
+        location="Chennai",
+        total_slots=10,
+    )
+
+    slot = Slot.objects.create(
+        parking_lot=parking_lot,
+        slot_number=1,
+        vehicle_type="CAR",
+        is_available=True,
+    )
+
+    booking = Booking.objects.create(
+        user=user1,
+        slot=slot,
+        start_time=timezone.now(),
+        end_time=timezone.now() + timedelta(hours=1),
+        amount="100.00",
+        status="PENDING",
+    )
+
+    client = APIClient()
+
+    # Authenticate as user2
+    client.force_authenticate(user=user2)
+
+    response = client.post(
+        "/api/auth/payments/",
+        {
+            "booking": booking.id,
+        },
+        format="json",
+    )
+
+    # User2 must not be allowed to pay for User1's booking
+    assert response.status_code == 400
+
+    booking.refresh_from_db()
+
+    # Booking must remain pending
+    assert booking.status == "PENDING"
+
+    # No payment should be created
+    assert not Payment.objects.filter(
+        booking=booking
+    ).exists()
+
+@pytest.mark.django_db
+def test_normal_user_cannot_create_slot():
+    user = User.objects.create_user(
+        username="slotuser",
+        password="password123",
+    )
+
+    parking_lot = ParkingLot.objects.create(
+        name="Secure Parking",
+        location="Chennai",
+        total_slots=10,
+    )
+
+    client = APIClient()
+    client.force_authenticate(user=user)
+
+    response = client.post(
+        "/api/auth/slots/",
+        {
+            "parking_lot": parking_lot.id,
+            "slot_number": 1,
+            "vehicle_type": "CAR",
+            "is_available": True,
+        },
+        format="json",
+    )
+
+    assert response.status_code == 400
+
+    assert not Slot.objects.filter(
+        parking_lot=parking_lot,
+        slot_number=1
+    ).exists()
+
+@pytest.mark.django_db
+def test_cannot_book_unavailable_slot():
+    user = User.objects.create_user(
+        username="unavailableuser",
+        password="password123",
+    )
+
+    parking_lot = ParkingLot.objects.create(
+        name="Protected Parking",
+        location="Chennai",
+        total_slots=10,
+    )
+
+    slot = Slot.objects.create(
+        parking_lot=parking_lot,
+        slot_number=1,
+        vehicle_type="CAR",
+        is_available=False,
+    )
+
+    client = APIClient()
+    client.force_authenticate(user=user)
+
+    start_time = timezone.now()
+    end_time = start_time + timedelta(hours=1)
+
+    response = client.post(
+        "/api/auth/bookings/",
+        {
+            "slot": slot.id,
+            "start_time": start_time.isoformat(),
+            "end_time": end_time.isoformat(),
+            "amount": "100.00",
+        },
+        format="json",
+    )
+
+    # Unavailable slot must not be bookable
+    assert response.status_code == 400
+
+    # No booking should have been created
+    assert not Booking.objects.filter(
+        user=user,
+        slot=slot
+    ).exists()  

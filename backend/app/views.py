@@ -20,6 +20,7 @@ from .serializers import (
     SlotSerializer,
     BookingSerializer,
     PaymentSerializer,
+    CurrentUserSerializer,
 )
 
 
@@ -37,7 +38,15 @@ class ParkingLotListCreateView(generics.ListCreateAPIView):
 class SlotListCreateView(generics.ListCreateAPIView):
     queryset = Slot.objects.all()
     serializer_class = SlotSerializer
+    permission_classes = [IsAuthenticated]
 
+    def perform_create(self, serializer):
+        if not self.request.user.is_staff:
+            raise serializers.ValidationError(
+                "Only administrators can create parking slots."
+            )
+
+        serializer.save()
 
 class BookingListCreateView(generics.ListCreateAPIView):
     serializer_class = BookingSerializer
@@ -53,8 +62,43 @@ class BookingListCreateView(generics.ListCreateAPIView):
             user=user
         ).order_by("-created_at")
 
+    @transaction.atomic
     def perform_create(self, serializer):
-        booking = serializer.save(user=self.request.user)
+        slot_id = self.request.data.get("slot")
+        start_time = self.request.data.get("start_time")
+        end_time = self.request.data.get("end_time")
+
+        try:
+            slot = Slot.objects.select_for_update().get(
+                id=slot_id
+            )
+        except Slot.DoesNotExist:
+            raise serializers.ValidationError(
+                "Parking slot does not exist."
+            )
+
+        if not slot.is_available:
+            raise serializers.ValidationError(
+                "This parking slot is already occupied."
+            )
+
+        # Check for overlapping bookings
+        overlapping_booking = Booking.objects.filter(
+            slot=slot,
+            status__in=["PENDING", "CONFIRMED"],
+            start_time__lt=end_time,
+            end_time__gt=start_time,
+        ).exists()
+
+        if overlapping_booking:
+            raise serializers.ValidationError(
+                "This parking slot is already booked for the selected time."
+            )
+
+        booking = serializer.save(
+            user=self.request.user,
+            amount=self.request.data.get("amount")
+        )
 
         AuditLog.objects.create(
             user=self.request.user,
@@ -66,6 +110,7 @@ class BookingListCreateView(generics.ListCreateAPIView):
         )
 
 
+        
 class PaymentCreateView(generics.CreateAPIView):
     serializer_class = PaymentSerializer
     permission_classes = [IsAuthenticated]
@@ -113,7 +158,9 @@ class PaymentCreateView(generics.CreateAPIView):
 
 
 class CurrentUserView(generics.RetrieveAPIView):
+    serializer_class = CurrentUserSerializer
     permission_classes = [IsAuthenticated]
+
 
     def get(self, request):
         user = request.user
