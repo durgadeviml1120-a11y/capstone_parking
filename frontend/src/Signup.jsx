@@ -1,20 +1,18 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import parkingImage from "./assets/parking-login.png";
+import parkingImage from "./assets/signup-parking.png";
 import "./signup.css";
 
 function Signup() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
 
   const handleSignup = async (e) => {
     e.preventDefault();
     setMessage("");
-    setLoading(true);
 
     try {
       const response = await fetch(
@@ -52,273 +50,133 @@ function Signup() {
     } catch (error) {
       console.error(error);
       setMessage("Unable to connect to server");
-    } finally {
-      setLoading(false);
     }
   };
 
   return (
     <div className="signup-page">
 
-      {/* ================= LEFT VISUAL ================= */}
-
-      <div className="signup-visual">
-
+      {/* LEFT IMAGE */}
+      <div className="signup-image-section">
         <img
           src={parkingImage}
           alt="Smart Parking"
-          className="signup-background-image"
+          className="signup-parking-image"
         />
 
-        <div className="signup-visual-overlay"></div>
+        <div className="signup-image-overlay">
+          <div className="parking-logo">P</div>
 
-        <div className="signup-brand">
+          <h2>Park Smarter.</h2>
 
-          <div className="signup-brand-badge">
-            🅿
-          </div>
-
-          <p className="signup-brand-small">
-            SMART MOBILITY
+          <p>
+            Simple, secure and convenient parking
+            whenever you need it.
           </p>
-
-          <h1>
-            Park
-            <br />
-            <span>Smarter.</span>
-          </h1>
-
-          <p className="signup-brand-description">
-            Create your account and experience a
-            simpler way to find, reserve and manage
-            your parking space.
-          </p>
-
-          <div className="signup-features">
-
-            <div>
-              <span>✓</span>
-              Real-time parking availability
-            </div>
-
-            <div>
-              <span>✓</span>
-              Quick and secure booking
-            </div>
-
-            <div>
-              <span>✓</span>
-              Simple digital payments
-            </div>
-
-          </div>
-
         </div>
-
       </div>
 
-      {/* ================= RIGHT SIGNUP ================= */}
-
+      {/* RIGHT FORM */}
       <div className="signup-form-section">
 
         <div className="signup-card">
 
-          {/* Mobile logo */}
-
-          <div className="signup-mobile-brand">
-
-            <div className="signup-mobile-badge">
-              🅿
-            </div>
-
-            <span>SMART PARKING</span>
-
+          <div className="signup-top-label">
+            GET STARTED
           </div>
 
-          {/* Heading */}
+          <h1>Create your account</h1>
 
-          <div className="signup-heading">
-
-            <p className="signup-welcome">
-              GET STARTED
-            </p>
-
-            <h2>
-              Create your account
-            </h2>
-
-            <p>
-              Join Smart Parking and make parking
-              easier every day.
-            </p>
-
-          </div>
-
-          {/* Form */}
+          <p className="signup-subtitle">
+            Join Smart Parking and make parking easier.
+          </p>
 
           <form onSubmit={handleSignup}>
 
-            {/* Username */}
+            <div className="signup-field">
+              <label>Username</label>
 
-            <div className="signup-input-group">
-
-              <label htmlFor="username">
-                Username
-              </label>
-
-              <div className="signup-input-wrapper">
-
-                <span className="signup-input-icon">
-                  👤
-                </span>
-
-                <input
-                  id="username"
-                  type="text"
-                  placeholder="Enter your username"
-                  value={username}
-                  onChange={(e) =>
-                    setUsername(e.target.value)
-                  }
-                  required
-                />
-
-              </div>
-
+              <input
+                type="text"
+                placeholder="Enter your username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+              />
             </div>
 
-            {/* Email */}
+            <div className="signup-field">
+              <label>Email</label>
 
-            <div className="signup-input-group">
-
-              <label htmlFor="email">
-                Email
-              </label>
-
-              <div className="signup-input-wrapper">
-
-                <span className="signup-input-icon">
-                  ✉
-                </span>
-
-                <input
-                  id="email"
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) =>
-                    setEmail(e.target.value)
-                  }
-                  required
-                />
-
-              </div>
-
+              <input
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
             </div>
 
-            {/* Password */}
+            <div className="signup-field">
+              <label>Password</label>
 
-            <div className="signup-input-group">
-
-              <label htmlFor="password">
-                Password
-              </label>
-
-              <div className="signup-input-wrapper">
-
-                <span className="signup-input-icon">
-                  🔒
-                </span>
+              <div className="password-wrapper">
 
                 <input
-                  id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="Create a password"
                   value={password}
-                  onChange={(e) =>
-                    setPassword(e.target.value)
-                  }
+                  onChange={(e) => setPassword(e.target.value)}
                   minLength={8}
                   required
                 />
 
                 <button
                   type="button"
-                  className="signup-password-toggle"
+                  className="password-toggle"
                   onClick={() =>
                     setShowPassword(!showPassword)
                   }
-                  aria-label={
-                    showPassword
-                      ? "Hide password"
-                      : "Show password"
-                  }
                 >
-                  {showPassword ? "🙈" : "👁"}
+                  {showPassword ? "Hide" : "Show"}
                 </button>
 
               </div>
 
-              <p className="password-hint">
-                Password must contain at least 8 characters.
-              </p>
-
+              <small>
+                Use at least 8 characters.
+              </small>
             </div>
-
-            {/* Button */}
 
             <button
               type="submit"
-              className="signup-button-main"
-              disabled={loading}
+              className="signup-button"
             >
-
-              {loading ? (
-                <>
-                  <span className="signup-spinner"></span>
-                  Creating account...
-                </>
-              ) : (
-                <>
-                  Create Account
-                  <span>→</span>
-                </>
-              )}
-
+              Create Account
             </button>
 
           </form>
 
-          {/* Message */}
-
           {message && (
-            <div
-              className={`signup-message ${
+            <p
+              className={
                 message.includes("successful")
-                  ? "signup-success"
-                  : "signup-error"
-              }`}
+                  ? "signup-message success"
+                  : "signup-message error"
+              }
             >
               {message}
-            </div>
+            </p>
           )}
 
-          {/* Login */}
-
-          <div className="signup-divider">
-            <span>Already have an account?</span>
-          </div>
-
-          <Link
-            to="/login"
-            className="signup-login-button"
-          >
-            Sign in to your account
-          </Link>
-
-          <p className="signup-footer">
-            Smart Parking &nbsp;•&nbsp; Smart Mobility
+          <p className="signin-text">
+            Already have an account?{" "}
+            <Link to="/login">Sign in</Link>
           </p>
+
+          <div className="signup-footer">
+            Smart Parking &nbsp;•&nbsp; Secure &nbsp;•&nbsp; Reliable
+          </div>
 
         </div>
 

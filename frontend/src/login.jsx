@@ -15,26 +15,48 @@ function Login() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+
     setMessage("");
     setLoading(true);
 
     try {
+      // Login API
       const response = await API.post("login/", {
         username,
         password,
       });
 
-      localStorage.setItem("access_token", response.data.access);
-      localStorage.setItem("refresh_token", response.data.refresh);
-      localStorage.setItem("username", username);
+      // Save JWT tokens
+      localStorage.setItem(
+        "access_token",
+        response.data.access
+      );
 
+      localStorage.setItem(
+        "refresh_token",
+        response.data.refresh
+      );
+
+      localStorage.setItem(
+        "username",
+        username
+      );
+
+      // Get logged-in user's details
       const userResponse = await API.get("me/");
+
       const role = userResponse.data.role;
 
-      localStorage.setItem("user_role", role);
+      // Save role
+      localStorage.setItem(
+        "user_role",
+        role
+      );
 
+      // Success message
       setMessage("Login successful!");
 
+      // Navigate based on role
       setTimeout(() => {
         if (role === "admin") {
           navigate("/admin-dashboard");
@@ -42,6 +64,7 @@ function Login() {
           navigate("/dashboard");
         }
       }, 500);
+
     } catch (error) {
       console.error(error);
 
@@ -50,6 +73,7 @@ function Login() {
         "Invalid username or password";
 
       setMessage(errorMessage);
+
     } finally {
       setLoading(false);
     }
@@ -58,195 +82,174 @@ function Login() {
   return (
     <div className="login-page">
 
-      {/* LEFT VISUAL SECTION */}
-      <div className="login-visual">
+      {/* =================================
+          COMPLETE PARKING LOGIN IMAGE
+      ================================= */}
 
-        <img
-          src={parkingImage}
-          alt="Smart Parking"
-          className="login-background-image"
+      <img
+        src={parkingImage}
+        alt="Smart Parking Login"
+        className="login-background"
+      />
+
+
+      {/* =================================
+          FUNCTIONAL LOGIN FORM
+      ================================= */}
+
+      <form
+        className="login-functional-form"
+        onSubmit={handleLogin}
+      >
+
+        {/* =================================
+            USERNAME
+        ================================= */}
+
+        <div className="username-area">
+
+          <input
+            type="text"
+            value={username}
+            onChange={(e) =>
+              setUsername(e.target.value)
+            }
+            placeholder="Username"
+            required
+            aria-label="Username"
+            autoComplete="username"
+          />
+
+        </div>
+
+
+        {/* =================================
+            PASSWORD
+        ================================= */}
+
+        <div className="password-area">
+
+          <input
+            type={
+              showPassword
+                ? "text"
+                : "password"
+            }
+            value={password}
+            onChange={(e) =>
+              setPassword(e.target.value)
+            }
+            placeholder="Password"
+            required
+            aria-label="Password"
+            autoComplete="current-password"
+          />
+
+        </div>
+
+
+        {/* =================================
+            PASSWORD EYE
+
+            The eye image already exists
+            inside parking-login.png.
+
+            This button is invisible and
+            only provides functionality.
+        ================================= */}
+
+        <button
+          type="button"
+          className="password-eye-area"
+          onClick={() =>
+            setShowPassword(!showPassword)
+          }
+          aria-label={
+            showPassword
+              ? "Hide password"
+              : "Show password"
+          }
         />
 
-        <div className="login-visual-overlay"></div>
 
-        <div className="login-brand">
+        {/* =================================
+            REMEMBER ME
+        ================================= */}
 
-          <div className="brand-badge">
-            <span>🅿</span>
-          </div>
+        <label className="remember-area">
 
-          <p className="brand-small">
-            SMART MOBILITY
-          </p>
+          <input
+            type="checkbox"
+            defaultChecked
+          />
 
-          <h1>
-            Find. Park.
-            <br />
-            <span>Go.</span>
-          </h1>
+        </label>
 
-          <p className="brand-description">
-            A smarter way to find, reserve and manage
-            your parking space.
-          </p>
 
-          <div className="brand-features">
-            <div>
-              <span>✓</span>
-              Real-time availability
-            </div>
+        {/* =================================
+            FORGOT PASSWORD
+        ================================= */}
 
-            <div>
-              <span>✓</span>
-              Secure slot booking
-            </div>
+        <button
+          type="button"
+          className="forgot-area"
+          onClick={() =>
+            alert(
+              "Password reset feature coming soon."
+            )
+          }
+          aria-label="Forgot Password"
+        />
 
-            <div>
-              <span>✓</span>
-              Easy digital payments
-            </div>
-          </div>
 
-        </div>
+        {/* =================================
+            LOGIN BUTTON
+        ================================= */}
 
-      </div>
+        <button
+          type="submit"
+          className="login-button-area"
+          disabled={loading}
+          aria-label="Login"
+        >
 
-      {/* RIGHT LOGIN SECTION */}
-      <div className="login-form-section">
-
-        <div className="login-card">
-
-          <div className="mobile-brand">
-            <div className="brand-badge">
-              <span>🅿</span>
-            </div>
-            <span>SMART PARKING</span>
-          </div>
-
-          <div className="login-heading">
-            <p className="welcome-label">
-              WELCOME BACK
-            </p>
-
-            <h2>
-              Sign in to your account
-            </h2>
-
-            <p>
-              Access your parking dashboard and
-              manage your bookings.
-            </p>
-          </div>
-
-          <form onSubmit={handleLogin}>
-
-            <div className="input-group">
-              <label htmlFor="username">
-                Username
-              </label>
-
-              <div className="input-wrapper">
-                <span className="input-icon">👤</span>
-
-                <input
-                  id="username"
-                  type="text"
-                  placeholder="Enter your username"
-                  value={username}
-                  onChange={(e) =>
-                    setUsername(e.target.value)
-                  }
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="input-group">
-              <label htmlFor="password">
-                Password
-              </label>
-
-              <div className="input-wrapper">
-                <span className="input-icon">🔒</span>
-
-                <input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) =>
-                    setPassword(e.target.value)
-                  }
-                  required
-                />
-
-                <button
-                  type="button"
-                  className="password-toggle"
-                  onClick={() =>
-                    setShowPassword(!showPassword)
-                  }
-                  aria-label={
-                    showPassword
-                      ? "Hide password"
-                      : "Show password"
-                  }
-                >
-                  {showPassword ? "🙈" : "👁"}
-                </button>
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              className="login-button"
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <span className="spinner"></span>
-                  Signing in...
-                </>
-              ) : (
-                <>
-                  Sign In
-                  <span>→</span>
-                </>
-              )}
-            </button>
-
-          </form>
-
-          {message && (
-            <div
-              className={`login-message ${
-                message === "Login successful!"
-                  ? "success"
-                  : "error"
-              }`}
-            >
-              {message}
-            </div>
+          {loading && (
+            <span className="login-loading-text">
+              Signing in...
+            </span>
           )}
 
-          <div className="login-divider">
-            <span>New to Smart Parking?</span>
-          </div>
+        </button>
 
-          <Link
-            to="/signup"
-            className="signup-button"
-          >
-            Create an account
-          </Link>
 
-          <p className="login-footer">
-            Smart Parking &nbsp;•&nbsp; Smart Mobility
-          </p>
+        {/* =================================
+            SIGN UP
+        ================================= */}
 
+        <Link
+          to="/signup"
+          className="signup-area"
+          aria-label="Sign up"
+        />
+
+      </form>
+
+
+      {/* =================================
+          LOGIN MESSAGE
+      ================================= */}
+
+      {message && (
+        <div
+          className={`login-message ${
+            message === "Login successful!"
+              ? "success"
+              : "error"
+          }`}
+        >
+          {message}
         </div>
-
-      </div>
+      )}
 
     </div>
   );
