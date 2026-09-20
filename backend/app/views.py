@@ -33,6 +33,15 @@ class SignupView(generics.CreateAPIView):
 class ParkingLotListCreateView(generics.ListCreateAPIView):
     queryset = ParkingLot.objects.all()
     serializer_class = ParkingLotSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        if not self.request.user.is_staff:
+            raise serializers.ValidationError(
+                "Only administrators can create parking lots."
+            )
+
+        serializer.save()
 
 
 class SlotListCreateView(generics.ListCreateAPIView):
@@ -58,46 +67,32 @@ class BookingListCreateView(generics.ListCreateAPIView):
         if user.is_staff:
             return Booking.objects.all().order_by("-created_at")
 
-        return Booking.objects.filter(
-            user=user
-        ).order_by("-created_at")
+        return Booking.objects.filter(user=user).order_by("-created_at")
 
     @transaction.atomic
     def perform_create(self, serializer):
         slot_id = self.request.data.get("slot")
-        start_time = self.request.data.get("start_time")
-        end_time = self.request.data.get("end_time")
 
-        try:
-            slot = Slot.objects.select_for_update().get(
-                id=slot_id
-            )
-        except Slot.DoesNotExist:
-            raise serializers.ValidationError(
-                "Parking slot does not exist."
-            )
+        # Lock the selected slot
+        slot = Slot.objects.select_for_update().get(id=slot_id)
 
+        # Check availability after acquiring the lock
         if not slot.is_available:
             raise serializers.ValidationError(
-                "This parking slot is already occupied."
+                "This parking slot is already booked."
             )
 
-        # Check for overlapping bookings
-        overlapping_booking = Booking.objects.filter(
-            slot=slot,
-            status__in=["PENDING", "CONFIRMED"],
-            start_time__lt=end_time,
-            end_time__gt=start_time,
-        ).exists()
+        amount = self.request.data.get("amount")
 
-        if overlapping_booking:
+        if not amount:
             raise serializers.ValidationError(
-                "This parking slot is already booked for the selected time."
+                "Booking amount is required."
             )
 
         booking = serializer.save(
             user=self.request.user,
-            amount=self.request.data.get("amount")
+            slot=slot,
+            amount=amount
         )
 
         AuditLog.objects.create(
@@ -105,7 +100,7 @@ class BookingListCreateView(generics.ListCreateAPIView):
             action="BOOKING_CREATED",
             details=(
                 f"Booking #{booking.id} created "
-                f"for Slot {booking.slot.slot_number}"
+                f"for Slot {slot.slot_number}"
             )
         )
 

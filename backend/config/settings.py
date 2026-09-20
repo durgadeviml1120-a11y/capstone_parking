@@ -122,3 +122,26 @@ SPECTACULAR_SETTINGS = {
     'DESCRIPTION': 'API documentation for the Smart Parking Management System',
     'VERSION': '1.0.0',
 }
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'app': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}

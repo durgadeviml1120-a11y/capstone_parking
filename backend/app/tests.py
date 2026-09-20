@@ -610,3 +610,29 @@ def test_cannot_book_unavailable_slot():
         user=user,
         slot=slot
     ).exists()  
+
+@pytest.mark.django_db
+def test_normal_user_cannot_create_parking_lot():
+    user = User.objects.create_user(
+        username="lotuser",
+        password="password123",
+    )
+
+    client = APIClient()
+    client.force_authenticate(user=user)
+
+    response = client.post(
+        "/api/auth/parking-lots/",
+        {
+            "name": "Unauthorized Parking",
+            "location": "Chennai",
+            "total_slots": 20,
+        },
+        format="json",
+    )
+
+    assert response.status_code == 400
+
+    assert not ParkingLot.objects.filter(
+        name="Unauthorized Parking"
+    ).exists()
