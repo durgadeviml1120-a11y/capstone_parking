@@ -61,17 +61,34 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOST'),
-        'PORT': os.getenv('DB_PORT'),
-    }
-}
+from urllib.parse import urlparse, unquote
 
+MYSQL_PUBLIC_URL = os.getenv("MYSQL_PUBLIC_URL")
+
+if MYSQL_PUBLIC_URL:
+    db_url = urlparse(MYSQL_PUBLIC_URL)
+
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': db_url.path.lstrip('/'),
+            'USER': unquote(db_url.username or ''),
+            'PASSWORD': unquote(db_url.password or ''),
+            'HOST': db_url.hostname,
+            'PORT': str(db_url.port or 3306),
+        }
+    }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.getenv('DB_NAME'),
+            'USER': os.getenv('DB_USER'),
+            'PASSWORD': os.getenv('DB_PASSWORD'),
+            'HOST': os.getenv('DB_HOST'),
+            'PORT': os.getenv('DB_PORT'),
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {
