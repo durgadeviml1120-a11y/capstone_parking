@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5173/api/auth';
+const API_URL = import.meta.env.VITE_API_URL || 'https://capstone-parking-dodv.onrender.com/api/auth';
 
 export const api = axios.create({
   baseURL: API_URL,
@@ -10,71 +10,40 @@ export const api = axios.create({
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem("access_token");
-
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
-
         return config;
     },
     (error) => Promise.reject(error)
 );
 
-// Automatically refresh expired access token
+// Refresh token interceptor
 api.interceptors.response.use(
     (response) => response,
-
     async (error) => {
         const originalRequest = error.config;
-
-        if (
-            error.response?.status === 401 &&
-            !originalRequest._retry
-        ) {
+        if (error.response?.status === 401 && !originalRequest._retry) {
             originalRequest._retry = true;
-
-            const refreshToken =
-                localStorage.getItem("refresh_token");
-
+            const refreshToken = localStorage.getItem("refresh_token");
             if (refreshToken) {
                 try {
                     const response = await axios.post(
                         `${API_URL}/token/refresh/`,
-                        {
-                            refresh: refreshToken,
-                        }
+                        { refresh: refreshToken }
                     );
-
-                    const newAccessToken =
-                        response.data.access;
-
-                    localStorage.setItem(
-                        "access_token",
-                        newAccessToken
-                    );
-
-                    originalRequest.headers.Authorization =
-                        `Bearer ${newAccessToken}`;
-
+                    const newAccessToken = response.data.access;
+                    localStorage.setItem("access_token", newAccessToken);
+                    originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
                     return api(originalRequest);
                 } catch (refreshError) {
-                    console.error(
-                        "Token refresh failed:",
-                        refreshError
-                    );
-
                     localStorage.removeItem("access_token");
                     localStorage.removeItem("refresh_token");
-                    localStorage.removeItem("username");
-                    localStorage.removeItem("user_role");
-
                     window.location.href = "/login";
-
                     return Promise.reject(refreshError);
                 }
             }
         }
-
         return Promise.reject(error);
     }
 );
