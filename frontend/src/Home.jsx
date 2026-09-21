@@ -13,7 +13,6 @@ import {
     CheckCircle2,
 } from "lucide-react";
 
-import "./home.css";
 
 function Home() {
     const token = localStorage.getItem("access_token");

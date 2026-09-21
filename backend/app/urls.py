@@ -32,4 +32,4 @@ urlpatterns = [
     path('bookings/<int:pk>/cancel/',BookingCancelView.as_view(),name='booking-cancel'),
     path('me/', CurrentUserView.as_view(), name='current_user'),
     path("payments/", PaymentCreateView.as_view(), name="payment-create"),
-]
+] 
