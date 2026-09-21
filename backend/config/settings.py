@@ -150,6 +150,7 @@ REST_FRAMEWORK = {
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
+    "http://localhost:3000",
     "http://127.0.0.1:5173",
     "https://capstone-parking-frontend.onrender.com",  # Add this line
 ]
@@ -183,3 +184,14 @@ LOGGING = {
         },
     },
 }
+# Auto-create superuser on deploy
+if os.getenv('DJANGO_SUPERUSER_USERNAME'):
+    from django.core.management import call_command
+    try:
+        call_command('createsuperuser', 
+                     username=os.getenv('DJANGO_SUPERUSER_USERNAME'),
+                     email=os.getenv('DJANGO_SUPERUSER_EMAIL'),
+                     password=os.getenv('DJANGO_SUPERUSER_PASSWORD'),
+                     interactive=False)
+    except:
+        pass  # Already exists
