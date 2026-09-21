@@ -1,14 +1,13 @@
 import axios from "axios";
 
-const API = axios.create({
-    baseURL: "http://127.0.0.1:8000/api/auth/",
-    headers: {
-        "Content-Type": "application/json",
-    },
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5173/api/auth';
+
+export const api = axios.create({
+  baseURL: API_URL,
 });
 
 // Attach JWT access token
-API.interceptors.request.use(
+api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem("access_token");
 
@@ -22,7 +21,7 @@ API.interceptors.request.use(
 );
 
 // Automatically refresh expired access token
-API.interceptors.response.use(
+api.interceptors.response.use(
     (response) => response,
 
     async (error) => {
@@ -40,7 +39,7 @@ API.interceptors.response.use(
             if (refreshToken) {
                 try {
                     const response = await axios.post(
-                        "http://127.0.0.1:8000/api/auth/token/refresh/",
+                        `${API_URL}/token/refresh/`,
                         {
                             refresh: refreshToken,
                         }
@@ -57,7 +56,7 @@ API.interceptors.response.use(
                     originalRequest.headers.Authorization =
                         `Bearer ${newAccessToken}`;
 
-                    return API(originalRequest);
+                    return api(originalRequest);
                 } catch (refreshError) {
                     console.error(
                         "Token refresh failed:",
@@ -80,4 +79,4 @@ API.interceptors.response.use(
     }
 );
 
-export default API;
+export default api;
