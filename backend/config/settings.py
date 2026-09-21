@@ -8,9 +8,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY')
 
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = []
+# Update for Render deployment
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    'capstone-parking-dodv.onrender.com',
+    'capstone-parking-dodv.onrender.com',
+    os.getenv('RENDER_EXTERNAL_HOSTNAME', ''),
+    '*',  # Temporary - remove this later for production
+]
 
 
 INSTALLED_APPS = [
@@ -67,6 +75,14 @@ MYSQL_PUBLIC_URL = os.getenv("MYSQL_PUBLIC_URL")
 
 if MYSQL_PUBLIC_URL:
     db_url = urlparse(MYSQL_PUBLIC_URL)
+    
+    # Properly handle port - convert to integer
+    port = 3306  # Default MySQL port
+    if db_url.port:
+        try:
+            port = int(db_url.port)
+        except (ValueError, TypeError):
+            port = 3306
 
     DATABASES = {
         'default': {
@@ -75,7 +91,7 @@ if MYSQL_PUBLIC_URL:
             'USER': unquote(db_url.username or ''),
             'PASSWORD': unquote(db_url.password or ''),
             'HOST': db_url.hostname,
-            'PORT': str(db_url.port or 3306),
+            'PORT': port,  # Now it's an integer, not a string
         }
     }
 else:
@@ -86,7 +102,7 @@ else:
             'USER': os.getenv('DB_USER'),
             'PASSWORD': os.getenv('DB_PASSWORD'),
             'HOST': os.getenv('DB_HOST'),
-            'PORT': os.getenv('DB_PORT'),
+            'PORT': int(os.getenv('DB_PORT', 3306)),  # Convert to int with default
         }
     }
 
@@ -115,7 +131,8 @@ USE_I18N = True
 USE_TZ = True
 
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 
 MAILERS = {
@@ -130,15 +147,20 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
+
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
 ]
+
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Smart Parking API',
     'DESCRIPTION': 'API documentation for the Smart Parking Management System',
     'VERSION': '1.0.0',
 }
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
