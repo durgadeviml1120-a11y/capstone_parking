@@ -6,10 +6,6 @@ export default defineConfig({
   preview: {
     host: '0.0.0.0',
     port: process.env.PORT || 4173,
-    allowedHosts: [
-      'localhost',
-      '127.0.0.1',
-      'capstone-parking-frontend.onrender.com'
-    ]
+    allowedHosts: ['capstone-parking-frontend.onrender.com']
   }
 })

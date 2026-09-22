@@ -12,12 +12,7 @@ DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 # Update for Render deployment
 ALLOWED_HOSTS = [
-    'localhost',
-    '127.0.0.1',
-    'capstone-parking-dodv.onrender.com',
-    'capstone-parking-dodv.onrender.com',
-    os.getenv('RENDER_EXTERNAL_HOSTNAME', ''),
-    '*',  # Temporary - remove this later for production
+    'capstone-parking-dodv.onrender.com',os.getenv('RENDER_EXTERNAL_HOSTNAME', ''),
 ]
 
 
@@ -149,9 +144,6 @@ REST_FRAMEWORK = {
 }
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://localhost:3000",
-    "http://127.0.0.1:5173",
     "https://capstone-parking-frontend.onrender.com",  # Add this line
 ]
 
