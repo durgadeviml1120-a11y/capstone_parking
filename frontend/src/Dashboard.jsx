@@ -15,7 +15,7 @@ function Dashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem('access_token');i
+    const token = localStorage.getItem('access_token');
     if (!token) {
       navigate('/login');
       return;
