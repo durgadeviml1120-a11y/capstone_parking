@@ -15,6 +15,11 @@ function Dashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    const token = localStorage.getItem('access_token');i
+    if (!token) {
+      navigate('/login');
+      return;
+    }
     const fetchParkingData = async () => {
       try {
         const parkingResponse = await API.get("parking-lots/");
