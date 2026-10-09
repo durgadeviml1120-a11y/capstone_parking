@@ -56,7 +56,7 @@ function Dashboard() {
     };
 
     fetchParkingData();
-  }, []);
+  }, [navigate]);
 
   const availableSlots = slots.filter(
     (slot) => slot.is_available
