@@ -13,10 +13,10 @@ export default function Home() {
             <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#2563eb' }}>SmartPark</h1>
           </div>
           <button 
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate('/login')}
             style={{ background: '#2563eb', color: 'white', padding: '0.5rem 1.5rem', borderRadius: '0.5rem', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
           >
-            Dashboard
+            Login
           </button>
         </div>
       </nav>
@@ -31,7 +31,7 @@ export default function Home() {
           Smart parking for every destination. Find available parking spaces and reserve your slot before you arrive.
         </p>
         <button 
-          onClick={() => navigate('/dashboard')}
+          onClick={() => navigate('/signup')}
           style={{ background: '#2563eb', color: 'white', padding: '1rem 2.5rem', borderRadius: '0.5rem', border: 'none', cursor: 'pointer', fontSize: '1.125rem', fontWeight: 'bold' }}
         >
           Get Started →
@@ -99,7 +99,7 @@ export default function Home() {
           <h3 style={{ fontSize: '2.25rem', fontWeight: 'bold', marginBottom: '1rem', color: '#111827' }}>Ready to park smarter?</h3>
           <p style={{ fontSize: '1.25rem', color: '#4b5563', marginBottom: '2rem' }}>Find and reserve your parking space today.</p>
           <button 
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate('/signup')}
             style={{ background: '#2563eb', color: 'white', padding: '1rem 2.5rem', borderRadius: '0.5rem', border: 'none', cursor: 'pointer', fontSize: '1.125rem', fontWeight: 'bold' }}
           >
             Get Started Now →
